@@ -6,6 +6,7 @@ httpx
 sqlalchemy
 sqlalchemy[asyncio]
 psycopg
+psycopg[binary]
 langchain[llms]
 langchain
 langgraph
