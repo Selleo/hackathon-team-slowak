@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Sidebar,
   SidebarHeader,
@@ -10,117 +11,161 @@ import {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarGroupContent,
 } from "@/components/ui/sidebar.tsx";
 import {
-  NotebookPen,
-  NotebookTabs,
+  Home,
+  BookOpen,
+  Settings,
+  Bell,
+  Search,
+  ChevronDown,
   FileText,
   Calendar,
   Tag,
+  UserIcon,
+  LogOut,
 } from "lucide-react";
-import { LogOut } from "lucide-react";
-import { Button } from "@/components/ui/button.tsx";
+import { NavLink } from "react-router-dom";
+import {
+  Avatar,
+  AvatarImage,
+  AvatarFallback,
+} from "@/components/ui/avatar.tsx";
+import { Input } from "@/components/ui/input";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible.tsx";
-import { Link, NavLink } from "react-router-dom";
-
-const handleLogout = () => {
-  console.log("User logged out");
-};
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 const drafts = [
-  {
-    title: "Marketing Campaign 2024",
-    url: "/drafts/1",
-    icon: NotebookPen,
-    submenu: [
-      { title: "Introduction", url: "/drafts/1/intro", icon: FileText },
-      { title: "Schedule", url: "/drafts/1/schedule", icon: Calendar },
-      { title: "Tags", url: "/drafts/1/tags", icon: Tag },
-    ],
-  },
-  {
-    title: "Product Roadmap Q1",
-    url: "/drafts/2",
-    icon: NotebookPen,
-    submenu: [
-      { title: "Overview", url: "/drafts/2/overview", icon: FileText },
-      { title: "Timeline", url: "/drafts/2/timeline", icon: Calendar },
-      { title: "Categories", url: "/drafts/2/categories", icon: Tag },
-    ],
-  },
-  {
-    title: "Team Meeting Notes",
-    url: "/drafts/3",
-    icon: NotebookPen,
-    submenu: [
-      { title: "Agenda", url: "/drafts/3/agenda", icon: FileText },
-      { title: "Action Items", url: "/drafts/3/actions", icon: Calendar },
-    ],
-  },
+  { title: "Introduction", url: "/drafts/1/intro", icon: FileText },
+  { title: "Schedule", url: "/drafts/1/schedule", icon: Calendar },
+  { title: "Tags", url: "/drafts/1/tags", icon: Tag },
 ];
 
 export const AppSidebar = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+
   return (
-    <Sidebar>
-      <SidebarHeader className="border-b px-6 py-4">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-          Luma
-        </h1>
+    <Sidebar className="border-r">
+      <SidebarHeader className="border-b px-4 py-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Avatar className="size-8">
+              <AvatarImage src="logo.png" alt="Luma logo" />
+            </Avatar>
+            <h1 className="text-lg font-bold">Luma</h1>
+          </div>
+          <button className="p-1.5 hover:bg-accent rounded-md transition-colors">
+            <Bell className="size-4" />
+          </button>
+        </div>
+        <div className="relative">
+          <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
+          <Input
+            placeholder="Search courses..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-8 h-9"
+          />
+        </div>
       </SidebarHeader>
 
-      <SidebarContent className="flex flex-col">
-        <SidebarGroup className="">
-          <SidebarGroupLabel className="mb-2 py-2 text-xs items-center flex font-semibold uppercase tracking-wider text-muted-foreground">
-            <NotebookTabs className="mr-2 h-4 w-4 inline" />
-            Your Drafts
-          </SidebarGroupLabel>
+      <SidebarContent className="px-2 py-4">
+        <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {drafts.map((draft) => (
-                <Collapsible key={draft.title} className="group/collapsible">
-                  <SidebarMenuItem>
-                    <CollapsibleTrigger asChild>
-                      <SidebarMenuButton className="data-[state=open]:bg-primary/10 data-[state=open]:text-primary">
-                        <draft.icon className="h-4 w-4" />
-                        <span className="font-medium">{draft.title}</span>
-                      </SidebarMenuButton>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <SidebarMenuSub>
-                        {draft.submenu.map((item) => (
-                          <SidebarMenuSubItem key={item.title}>
-                            <SidebarMenuSubButton asChild>
-                              <NavLink
-                                to={item.url}
-                                className="hover:text-primary"
-                              >
-                                <item.icon className="h-3 w-3" />
-                                <span>{item.title}</span>
-                              </NavLink>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        ))}
-                      </SidebarMenuSub>
-                    </CollapsibleContent>
-                  </SidebarMenuItem>
-                </Collapsible>
-              ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink
+                    to="/"
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${
+                        isActive
+                          ? "bg-primary text-primary-foreground"
+                          : "hover:bg-accent"
+                      }`
+                    }
+                  >
+                    <Home className="size-4" />
+                    <span>Dashboard</span>
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <Collapsible className="group/collapsible">
+                <SidebarMenuItem>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton className="px-3 flex gap-3 flex-row data-[state=open]:bg-accent data-[state=open]:text-accent-foreground">
+                      <BookOpen className="size-4" />
+                      <span>My Drafts</span>
+                      <ChevronDown className="ml-auto size-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      {drafts.map((item) => (
+                        <SidebarMenuSubItem key={item.title}>
+                          <SidebarMenuSubButton asChild>
+                            <NavLink
+                              to={item.url}
+                              className={({ isActive }) =>
+                                `flex items-center gap-2 ${
+                                  isActive ? "bg-accent" : ""
+                                }`
+                              }
+                            >
+                              <item.icon className="size-3.5" />
+                              <span>{item.title}</span>
+                            </NavLink>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      ))}
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t p-4">
-        <Button onClick={handleLogout} variant="destructive" className="w-full">
-          <LogOut className="mr-2 h-4 w-4" />
-          Logout
-        </Button>
+      <SidebarFooter className="border-t p-2 w-full">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-3 w-full flex-1 px-3 py-2 rounded-lg hover:bg-accent transition-colors">
+              <Avatar className="size-9">
+                <AvatarImage src="avatar.png" />
+                <AvatarFallback>JA</AvatarFallback>
+              </Avatar>
+              <div className="flex-1 text-left min-w-0">
+                <p className="text-sm font-semibold truncate">John Appleseed</p>
+                <p className="text-xs text-muted-foreground truncate">
+                  John@appleseed.com
+                </p>
+              </div>
+              <Settings className="size-4 text-muted-foreground" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-60 flex flex-col gap-1">
+            <DropdownMenuItem className="p-2">
+              <UserIcon className="size-4" />
+              Profile Settings
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-destructive p-2">
+              <LogOut className="size-4" />
+              Logout
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </SidebarFooter>
     </Sidebar>
   );
