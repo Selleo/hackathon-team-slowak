@@ -1,6 +1,6 @@
-import { useAuthStore } from "@/app/modules/Auth/authStore";
 import { API } from "./generated-api";
 import { useCurrentUserStore } from "@/app/modules/Auth/useCurrentUserStore.ts";
+import { queryClient } from "@/app/api/queryClient.ts";
 
 export const requestManager = {
   controller: new AbortController(),
@@ -21,7 +21,7 @@ ApiClient.instance.interceptors.request.use((config) => {
   const isAuthEndpoint =
     config.url?.includes("/Login") || config.url?.includes("/Register");
 
-  if (!isAuthEndpoint && !useAuthStore.getState().isLoggedIn) {
+  if (!isAuthEndpoint && !useCurrentUserStore.getState().currentUser) {
     config.signal = requestManager.controller.signal;
   }
 
@@ -38,12 +38,12 @@ ApiClient.instance.interceptors.response.use(
     if (
       error.response?.status === 401 &&
       !error.config._retry &&
-      useAuthStore.getState().isLoggedIn
+      useCurrentUserStore.getState().currentUser
     ) {
       error.config._retry = true;
       try {
-        useAuthStore().setLoggedIn(false);
         useCurrentUserStore().setCurrentUser(undefined);
+        queryClient.clear();
         return ApiClient.instance(error.config);
       } catch {
         requestManager.abortAll();

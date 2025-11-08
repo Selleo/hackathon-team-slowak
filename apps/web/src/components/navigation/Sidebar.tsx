@@ -26,7 +26,7 @@ import {
   UserIcon,
   LogOut,
 } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import {
   Avatar,
   AvatarImage,
@@ -160,10 +160,12 @@ export const AppSidebar = () => {
               <UserIcon className="size-4" />
               Profile Settings
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive p-2">
-              <LogOut className="size-4" />
-              Logout
-            </DropdownMenuItem>
+            <Link to="/logout">
+              <DropdownMenuItem className="text-destructive p-2">
+                <LogOut className="size-4" />
+                Logout
+              </DropdownMenuItem>
+            </Link>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarFooter>
