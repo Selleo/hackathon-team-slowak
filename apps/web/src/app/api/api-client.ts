@@ -1,7 +1,6 @@
-import { authService } from "~/modules/Auth/authService";
-import { useAuthStore } from "~/modules/Auth/authStore";
-
+import { useAuthStore } from "@/app/modules/Auth/authStore";
 import { API } from "./generated-api";
+import { useCurrentUserStore } from "@/app/modules/Auth/useCurrentUserStore.ts";
 
 export const requestManager = {
   controller: new AbortController(),
@@ -43,8 +42,8 @@ ApiClient.instance.interceptors.response.use(
     ) {
       error.config._retry = true;
       try {
-        authService.logout();
-        await authService.refreshToken();
+        useAuthStore().setLoggedIn(false);
+        useCurrentUserStore().setCurrentUser(undefined);
         return ApiClient.instance(error.config);
       } catch {
         requestManager.abortAll();

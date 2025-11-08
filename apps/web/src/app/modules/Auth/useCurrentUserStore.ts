@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { UserResponse } from "@/api/generated-api.ts";
+import type { UserResponse } from "@/app/api/generated-api.ts";
 
 type CurrentUserStore = {
   currentUser?: UserResponse;
