@@ -18,16 +18,22 @@ import { Input } from "@/components/ui/input.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarImage } from "@/components/ui/avatar.tsx";
+import useRegisterUser from "@/app/api/mutations/useRegisterUser.ts";
 
 const registerSchema = z.object({
-  username: z.string().min(1, "Username is required"),
+  username: z
+    .string()
+    .min(3, "Username must be at least 3 character long")
+    .max(32, "Username must be at most 32 characters long"),
   email: z.email("Invalid email address"),
-  password: z.string().min(1, "Username is required"),
+  password: z.string().min(8, "Username must be at least 8 characters long"),
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 export const RegisterPage = () => {
+  const { mutateAsync: registerUser } = useRegisterUser();
+
   const {
     register,
     handleSubmit,
@@ -41,9 +47,8 @@ export const RegisterPage = () => {
     },
   });
 
-  const onSubmit = (data: RegisterFormData) => {
-    console.log("Form data:", data);
-    // Tutaj dodaj logikę rejestracji
+  const onSubmit = async (data: RegisterFormData) => {
+    await registerUser(data);
   };
 
   return (

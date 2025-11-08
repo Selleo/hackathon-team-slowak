@@ -1,10 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { HomePage } from "@/app/modules/home/Home.page.tsx";
-import { LoginPage } from "@/app/modules/login/Login.page.tsx";
-import { LogoutPage } from "@/app/modules/logout/Logout.page.tsx";
-import { NotFoundPage } from "@/app/modules/notFound/NotFound.page.tsx";
-import { RegisterPage } from "@/app/modules/register/Register.page.tsx";
-import HomeLayout from "@/app/modules/home/Home.layout.tsx";
+import { HomePage } from "@/app/modules/Home/Home.page.tsx";
+import { LoginPage } from "@/app/modules/Login/Login.page.tsx";
+import { LogoutPage } from "@/app/modules/Logout/Logout.page.tsx";
+import { NotFoundPage } from "@/app/modules/NotFound/NotFound.page.tsx";
+import { RegisterPage } from "@/app/modules/Register/Register.page.tsx";
+import HomeLayout from "@/app/modules/Home/Home.layout.tsx";
 import { Toaster } from "@/components/ui/sonner.tsx";
 
 function App() {

@@ -280,7 +280,7 @@ export class API<
      * @tags Authentication
      * @name RegisterApiV1AuthRegisterPost
      * @summary Register
-     * @request POST:/api/v1/auth/register
+     * @request POST:/api/v1/auth/Register
      */
     registerApiV1AuthRegisterPost: (
       data: UserRegister,
@@ -301,7 +301,7 @@ export class API<
      * @tags Authentication
      * @name LoginApiV1AuthLoginPost
      * @summary Login
-     * @request POST:/api/v1/auth/login
+     * @request POST:/api/v1/auth/Login
      */
     loginApiV1AuthLoginPost: (data: UserLogin, params: RequestParams = {}) =>
       this.request<Token, HTTPValidationError>({
@@ -319,7 +319,7 @@ export class API<
      * @tags Authentication
      * @name LogoutApiV1AuthLogoutPost
      * @summary Logout
-     * @request POST:/api/v1/auth/logout
+     * @request POST:/api/v1/auth/Logout
      */
     logoutApiV1AuthLogoutPost: (params: RequestParams = {}) =>
       this.request<any, any>({
