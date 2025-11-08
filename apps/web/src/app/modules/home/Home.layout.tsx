@@ -1,5 +1,5 @@
 import { AppSidebar } from "@/components/navigation/Sidebar.tsx";
-import { AppHeader } from "@/app/modules/home/header.tsx";
+import { AppHeader } from "@/app/modules/home/Header.tsx";
 import { SidebarProvider } from "@/components/ui/sidebar.tsx";
 import { Outlet } from "react-router-dom";
 
