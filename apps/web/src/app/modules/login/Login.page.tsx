@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/field.tsx";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarImage } from "@/components/ui/avatar.tsx";
+import useLoginUser from "@/app/api/mutations/useLoginUser.ts";
 
 const loginSchema = z.object({
   email: z.email("Invalid email address"),
@@ -27,6 +28,8 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export const LoginPage = () => {
+  const { mutateAsync: loginUser } = useLoginUser();
+
   const {
     register,
     handleSubmit,
@@ -39,9 +42,8 @@ export const LoginPage = () => {
     },
   });
 
-  const onSubmit = (data: LoginFormData) => {
-    console.log("Form data:", data);
-    // Tutaj dodaj logikę logowania
+  const onSubmit = async (data: LoginFormData) => {
+    await loginUser(data);
   };
 
   return (

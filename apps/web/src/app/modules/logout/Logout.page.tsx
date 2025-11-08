@@ -1,8 +1,18 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card.tsx";
 import { Avatar, AvatarImage } from "@/components/ui/avatar.tsx";
 import { FieldLegend, FieldSet } from "@/components/ui/field.tsx";
+import { useEffect } from "react";
+import useLogoutUser from "@/app/api/mutations/useLogoutUser.ts";
 
 export const LogoutPage = () => {
+  const { mutateAsync: logoutUser } = useLogoutUser();
+  useEffect(() => {
+    const logout = async () => {
+      await logoutUser();
+    };
+    logout();
+  }, [logoutUser]);
+
   return (
     <div className="flex items-center justify-center min-h-screen">
       <Card>
