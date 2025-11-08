@@ -20,3 +20,5 @@ pyjwt[crypto]
 passlib
 pytz
 black
+langchain-openai
+langgraph-checkpoint-postgres

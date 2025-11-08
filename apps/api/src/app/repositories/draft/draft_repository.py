@@ -3,7 +3,6 @@ from uuid import UUID
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.app.schemas.auth_schemas import UserResponse
 from src.app.schemas.draft_schemas import CreateDraft
 from src.db.models import Draft
 
