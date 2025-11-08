@@ -6,6 +6,7 @@ import { NotFoundPage } from "@/app/modules/NotFound/NotFound.page.tsx";
 import { RegisterPage } from "@/app/modules/Register/Register.page.tsx";
 import HomeLayout from "@/app/modules/Home/Home.layout.tsx";
 import { Toaster } from "@/components/ui/sonner.tsx";
+import { ProtectedRoute } from "@/app/modules/Auth/ProtectedRoute.tsx";
 
 function App() {
   return (
@@ -14,8 +15,14 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route index element={<Navigate to="/home" />} />
-          <Route path="/home" element={<HomeLayout />}>
-            <Route index element={<HomePage />} />
+          <Route
+            element={
+              <ProtectedRoute>
+                <HomeLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/home" element={<HomePage />} />
           </Route>
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />

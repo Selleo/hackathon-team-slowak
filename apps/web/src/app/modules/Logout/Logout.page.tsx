@@ -5,13 +5,17 @@ import { useEffect } from "react";
 import useLogoutUser from "@/app/api/mutations/useLogoutUser.ts";
 
 export const LogoutPage = () => {
-  const { mutateAsync: logoutUser } = useLogoutUser();
+  const { mutateAsync: logoutUser, isPending } = useLogoutUser();
   useEffect(() => {
     const logout = async () => {
       await logoutUser();
     };
     logout();
   }, [logoutUser]);
+
+  if (isPending) {
+    return null;
+  }
 
   return (
     <div className="flex items-center justify-center min-h-screen">
