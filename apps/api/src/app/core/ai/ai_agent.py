@@ -1,3 +1,4 @@
+import json
 import os
 from typing import Literal
 
@@ -12,9 +13,11 @@ from langgraph.types import Command, interrupt
 
 from src.app.core.ai.ai_schema import (
     DataCuratorOutput,
-    ObjectiveArchitectOutput,
+    AnalyzedData,
     MessagesState,
     EvaluatorOutput,
+    Syllabus,
+    CourseRevision,
 )
 from src.app.core.ai.prompt_manager import PromptManager
 
@@ -61,7 +64,7 @@ def repeat_curator(state: MessagesState) -> Command[Literal["data_curator"]]:
 
 
 def objective_architect(state: MessagesState) -> Command[Literal["evaluator_oa"]]:
-    oa_model = model.with_structured_output(ObjectiveArchitectOutput)
+    oa_model = model.with_structured_output(AnalyzedData)
     print("objective_architect")
 
     messages_text = "\n".join(
@@ -88,7 +91,7 @@ def objective_architect(state: MessagesState) -> Command[Literal["evaluator_oa"]
     return Command(
         goto="evaluator_oa",
         update={
-            "analyzed_objectives": response,
+            "analyzed_data": response,
             "llm_calls": state.get("llm_calls", 0) + 1,
             "evaluator": None,
         },
@@ -98,7 +101,7 @@ def objective_architect(state: MessagesState) -> Command[Literal["evaluator_oa"]
 def evaluator_oa(state: MessagesState):
     print("evaluator_oa")
     model_eval = model.with_structured_output(EvaluatorOutput)
-    analyzed_data = state.get("analyzed_objectives")
+    analyzed_data = state.get("analyzed_data")
     if not analyzed_data:
         return Command(
             goto="objective_architect",
@@ -108,7 +111,7 @@ def evaluator_oa(state: MessagesState):
     prompt = [
         SystemMessage(
             content=prompt_manager.get_evaluator_oa_prompt(
-                state.get("analyzed_objectives").get("analyzed_data"),
+                analyzed_data,
                 "\n".join(
                     [
                         msg.content
@@ -132,8 +135,6 @@ def evaluator_oa(state: MessagesState):
         else None
     )
 
-    print(state)
-
     return Command(
         goto="objective_architect" if feedback_state else "curriculum_designer",
         update={"evaluator": feedback_state},
@@ -141,8 +142,137 @@ def evaluator_oa(state: MessagesState):
 
 
 def curriculum_designer(state: MessagesState):
-    print("curriculum designer")
-    pass
+    print("cd")
+    cd_model = model.with_structured_output(Syllabus)
+
+    prompt = prompt_manager.get_curriculum_designer_prompt(state.get("analyzed_data"))
+
+    response = cd_model.invoke(prompt)
+
+    return Command(
+        goto="evaluator_cd",
+        update={
+            "syllabus": response,
+            "llm_calls": state.get("llm_calls", 0) + 1,
+            "evaluator": None,
+        },
+    )
+
+
+def evaluator_cd(state: MessagesState):
+    print("evaluator_cd")
+
+    model_eval = model.with_structured_output(EvaluatorOutput)
+    syllabus = state.get("syllabus")
+
+    if not syllabus:
+        return Command(
+            goto="curriculum_designer",
+            update={"evaluator": None},
+        )
+
+    prompt = [
+        SystemMessage(
+            content=prompt_manager.get_evaluator_cd_prompt(
+                syllabus,
+                "\n".join(
+                    [
+                        msg.content
+                        for msg in state.get("messages")
+                        if hasattr(msg, "content")
+                    ]
+                ),
+            )
+        )
+    ]
+
+    response = model_eval.invoke(prompt)
+
+    feedback_state = (
+        {
+            "retry": response.get("retry"),
+            "feedback": response.get("feedback"),
+            "agent": "curriculum_designer",
+        }
+        if response.get("retry")
+        else None
+    )
+
+    return Command(
+        goto="curriculum_designer" if feedback_state else "lesson_author",
+        update={"evaluator": feedback_state},
+    )
+
+
+def lesson_author(state: MessagesState):
+    print("lesson_author")
+    la_model = model.with_structured_output(CourseRevision)
+
+    prompt = prompt_manager.get_lesson_author_prompt(state.get("syllabus"))
+
+    response = la_model.invoke(prompt)
+
+    print(json.dumps(response, indent=4))
+
+    return Command(
+        goto="evaluator_la",
+        update={"course": response, "llm_calls": state.get("llm_calls", 0) + 1},
+    )
+
+
+def evaluator_la(state: MessagesState):
+    print("evaluator_la")
+
+    model_eval = model.with_structured_output(EvaluatorOutput)
+    course = state.get("course")
+
+    if not course:
+        return Command(
+            goto="lesson_author",
+            update={"evaluator": None},
+        )
+
+    prompt = [
+        SystemMessage(
+            content=prompt_manager.get_evaluator_la_prompt(
+                course.get("course"),
+                "\n".join(
+                    [
+                        msg.content
+                        for msg in state.get("messages")
+                        if hasattr(msg, "content")
+                    ]
+                ),
+            )
+        )
+    ]
+
+    response = model_eval.invoke(prompt)
+
+    feedback_state = (
+        {
+            "retry": response.get("retry"),
+            "feedback": response.get("feedback"),
+            "agent": "curriculum_designer",
+        }
+        if response.get("retry")
+        else None
+    )
+
+    return Command(
+        goto="lesson_author" if feedback_state else "lesson_author_hitl",
+        update={"evaluator": feedback_state},
+    )
+
+
+def lesson_author_hitl(state: MessagesState):
+    hitl = interrupt("DO_YOU_WANT_TO_PROCEED")
+
+    print("Here is the schema:", json.dumps(state.get("course").get("course")))
+
+    return Command(
+        goto=END if hitl else "lesson_author",
+    )
 
 
 builder.add_node("data_curator", data_curator)
@@ -150,23 +280,33 @@ builder.add_node("repeat_curator", repeat_curator)
 builder.add_node("objective_architect", objective_architect)
 builder.add_node("evaluator_oa", evaluator_oa)
 builder.add_node("curriculum_designer", curriculum_designer)
+builder.add_node("evaluator_cd", evaluator_cd)
+builder.add_node("lesson_author_hitl", lesson_author_hitl)
+builder.add_node("evaluator_la", evaluator_la)
+builder.add_node("lesson_author", lesson_author)
+
 
 builder.add_edge(START, "data_curator")
 builder.add_edge("repeat_curator", "data_curator")
-builder.add_edge("evaluator_oa", END)
+# builder.add_edge("implementation_engineer", END)
 
 with PostgresSaver.from_conn_string(
     os.getenv("LANGGRAPH_DATABASE_URL")
 ) as checkpointer:
     graph = builder.compile(checkpointer=checkpointer)
-    config = {"configurable": {"thread_id": "123fdsfsdabca"}}
+    config = {"configurable": {"thread_id": "test123"}}
 
     while True:
         msg = input("User: ")
         result = graph.invoke({"messages": [HumanMessage(content=msg)]}, config=config)
-        print(f"AI: {result.get("messages")[-1].content}")
+        print(f"AI: {result.get('messages')[-1].content}")
 
-        while result.get("__interrupt__"):
-            msg = input("User: ")
+        while type := result.get("__interrupt__"):
+            if type == "DO_YOU_WANT_TO_PROCEED":
+                msg = input("User (Y/N) - Do you want to proceed: ")
+                msg = True if msg == "Y" else False
+            else:
+                msg = input("User: ")
+
             result = graph.invoke(Command(resume=msg), config=config)
-            print(f"AI: {result.get("messages")[-1].content}")
+            print(f"AI: {result.get('messages')[-1].content}")
