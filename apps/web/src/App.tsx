@@ -1,4 +1,10 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  Outlet,
+} from "react-router-dom";
 import { HomePage } from "@/app/modules/Home/Home.page.tsx";
 import { LoginPage } from "@/app/modules/Login/Login.page.tsx";
 import { LogoutPage } from "@/app/modules/Logout/Logout.page.tsx";
@@ -18,11 +24,23 @@ function App() {
           <Route
             element={
               <ProtectedRoute>
-                <HomeLayout />
+                <HomeLayout>
+                  <Outlet />
+                </HomeLayout>
               </ProtectedRoute>
             }
           >
             <Route path="/home" element={<HomePage />} />
+            <Route
+              path="/draft/:draftId"
+              element={
+                <div>
+                  <h1>Koneser ziemniaków</h1>
+                  <h2>Uwielbiam ziemniaki</h2>
+                  <h3>Nie nie jestem naćpany</h3>
+                </div>
+              }
+            />
           </Route>
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
