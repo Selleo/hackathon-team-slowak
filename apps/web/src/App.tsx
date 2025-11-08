@@ -9,21 +9,21 @@ import { Toaster } from "@/components/ui/sonner.tsx";
 
 function App() {
   return (
-      <>
-          <Toaster position="top-right" />
-        <BrowserRouter>
-          <Routes>
-            <Route index element={<Navigate to="/home" />} />
-            <Route path="/home" element={<HomeLayout />}>
-              <Route index element={<HomePage />} />
-            </Route>
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/logout" element={<LogoutPage />} />
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </BrowserRouter>
-          </>
+    <>
+      <Toaster position="top-right" />
+      <BrowserRouter>
+        <Routes>
+          <Route index element={<Navigate to="/home" />} />
+          <Route path="/home" element={<HomeLayout />}>
+            <Route index element={<HomePage />} />
+          </Route>
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/logout" element={<LogoutPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </BrowserRouter>
+    </>
   );
 }
 
