@@ -1,3 +1,1 @@
-export const NotFoundLayout = () => {
-
-}
+export const NotFoundLayout = () => {};

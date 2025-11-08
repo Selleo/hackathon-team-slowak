@@ -1,3 +1,1 @@
-export const LoginLayout = () => {
-
-}
+export const LoginLayout = () => {};

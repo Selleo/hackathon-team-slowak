@@ -1,7 +1,7 @@
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.db.base import Base
+from src.db.Base import Base
 from src.db.mixins.mixins import IdMixin, TimestampsMixin
 
 

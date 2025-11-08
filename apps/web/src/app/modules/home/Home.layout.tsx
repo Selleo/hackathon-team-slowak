@@ -1,3 +1,1 @@
-export const HomeLayout = () => {
-
-}
+export const HomeLayout = () => {};

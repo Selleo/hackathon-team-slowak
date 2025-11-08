@@ -1,3 +1,1 @@
-export const RegisterLayout = () => {
-
-}
+export const RegisterLayout = () => {};
