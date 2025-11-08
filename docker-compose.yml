@@ -1,0 +1,33 @@
+services:
+  redis:
+    image: redis:8.0
+    restart: always
+    ports:
+      - 6379:6379
+    volumes:
+      - luma-redis-data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+  db:
+    image: pgvector/pgvector:pg16
+    env_file:
+      - apps/api/.env
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - luma-db-data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+
+volumes:
+  luma-redis-data:
+    driver: local
+
+  luma-db-data:
+    driver: local
