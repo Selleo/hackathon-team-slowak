@@ -16,7 +16,7 @@ export default function useLogoutUser() {
       navigate("/login");
     },
     onError: () => {
-      toast.error("Logout failed. Please try again.");
+      navigate("/home");
     },
   });
 }
