@@ -19,7 +19,7 @@ export const ApiClient = new API({
 
 ApiClient.instance.interceptors.request.use((config) => {
   const isAuthEndpoint =
-    config.url?.includes("/login") || config.url?.includes("/register");
+    config.url?.includes("/Login") || config.url?.includes("/Register");
 
   if (!isAuthEndpoint && !useAuthStore.getState().isLoggedIn) {
     config.signal = requestManager.controller.signal;
@@ -31,7 +31,7 @@ ApiClient.instance.interceptors.request.use((config) => {
 ApiClient.instance.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.config?.url?.includes("/logout")) {
+    if (error.config?.url?.includes("/Logout")) {
       return Promise.reject(error);
     }
 
