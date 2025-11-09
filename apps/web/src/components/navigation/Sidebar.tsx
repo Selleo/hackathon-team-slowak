@@ -20,11 +20,10 @@ import {
   Bell,
   Search,
   ChevronDown,
-  FileText,
-  Calendar,
-  Tag,
   UserIcon,
   LogOut,
+  AlertCircleIcon,
+  BookPlus,
 } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
 import {
@@ -44,15 +43,42 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-
-const drafts = [
-  { title: "Introduction", url: "/drafts/1/intro", icon: FileText },
-  { title: "Schedule", url: "/drafts/1/schedule", icon: Calendar },
-  { title: "Tags", url: "/drafts/1/tags", icon: Tag },
-];
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useDrafts } from "@/app/api/queries/useDrafts.ts";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemTitle,
+} from "@/components/ui/item.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
+import useCreateDraft from "@/app/api/mutations/useCreateDraft.ts";
 
 export const AppSidebar = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [draftTitle, setDraftTitle] = useState("");
+  const { data: draftsData, isSuccess, isLoading } = useDrafts();
+  const { mutateAsync: createDraft } = useCreateDraft();
+
+  const handleOpenDialog = () => {
+    setIsDialogOpen(true);
+  };
+
+  const handleCreateDraft = async () => {
+    await createDraft({ draftName: draftTitle });
+    setDraftTitle("");
+    setIsDialogOpen(false);
+  };
 
   return (
     <Sidebar className="border-r">
@@ -101,6 +127,18 @@ export const AppSidebar = () => {
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <button
+                    onClick={handleOpenDialog}
+                    className="flex items-center gap-3 px-3 py-2 rounded-lg transition-all hover:bg-accent w-full text-left"
+                  >
+                    <BookPlus className="size-4" />
+                    <span>Create new Draft</span>
+                  </button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
               <Collapsible className="group/collapsible">
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
@@ -112,23 +150,59 @@ export const AppSidebar = () => {
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <SidebarMenuSub>
-                      {drafts.map((item) => (
-                        <SidebarMenuSubItem key={item.title}>
-                          <SidebarMenuSubButton asChild>
-                            <NavLink
-                              to={item.url}
-                              className={({ isActive }) =>
-                                `flex items-center gap-2 ${
-                                  isActive ? "bg-accent" : ""
-                                }`
-                              }
-                            >
-                              <item.icon className="size-3.5" />
-                              <span>{item.title}</span>
-                            </NavLink>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
+                      {isLoading ? (
+                        <Item variant="outline">
+                          <ItemContent>
+                            <ItemTitle>Loading...</ItemTitle>
+                            <ItemDescription>
+                              It may take a while
+                            </ItemDescription>
+                          </ItemContent>
+                        </Item>
+                      ) : isSuccess ? (
+                        draftsData && draftsData.length > 0 ? (
+                          draftsData.map((item) => (
+                            <SidebarMenuSubItem key={item.id}>
+                              <SidebarMenuSubButton asChild>
+                                <NavLink
+                                  to={`/draft/${item.id}`}
+                                  className={({ isActive }) =>
+                                    `flex items-center gap-2 ${
+                                      isActive ? "bg-accent" : ""
+                                    }`
+                                  }
+                                >
+                                  <span>{item.draftName}</span>
+                                </NavLink>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ))
+                        ) : (
+                          <Item className="mt-2" variant="outline">
+                            <ItemContent>
+                              <ItemTitle>No Drafts Found</ItemTitle>
+                              <ItemDescription>
+                                You have no drafts available.
+                              </ItemDescription>
+                            </ItemContent>
+                            <ItemActions>
+                              <Button
+                                onClick={handleOpenDialog}
+                                className="cursor-pointer hover:bg-secondary"
+                              >
+                                Create new Draft
+                              </Button>
+                            </ItemActions>
+                          </Item>
+                        )
+                      ) : (
+                        <Alert variant="destructive">
+                          <AlertCircleIcon />
+                          <AlertDescription>
+                            Unable to load drafts. Please try again later.
+                          </AlertDescription>
+                        </Alert>
+                      )}
                     </SidebarMenuSub>
                   </CollapsibleContent>
                 </SidebarMenuItem>
@@ -169,6 +243,43 @@ export const AppSidebar = () => {
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarFooter>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Draft</DialogTitle>
+            <DialogDescription>
+              Enter a title for your new draft.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Input
+              placeholder="Draft title..."
+              value={draftTitle}
+              onChange={(e) => setDraftTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && draftTitle.trim()) {
+                  handleCreateDraft();
+                }
+              }}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsDialogOpen(false);
+                setDraftTitle("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleCreateDraft} disabled={!draftTitle.trim()}>
+              Create Draft
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Sidebar>
   );
 };

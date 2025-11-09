@@ -18,9 +18,6 @@ class DraftService:
     async def get_all_drafts(self, current_user: UserResponse):
         drafts = await self.draft_repository.get_all_drafts(current_user.id)
 
-        if len(drafts) == 0:
-            raise HTTPException(status_code=404, detail="NOT_FOUND")
-
         return [DraftResponseBody(**draft.__dict__) for draft in drafts]
 
     async def get_draft(self, current_user: UserResponse, draft_id: UUID):

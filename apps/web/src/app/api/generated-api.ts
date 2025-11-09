@@ -10,10 +10,50 @@
  * ---------------------------------------------------------------
  */
 
+/** CreateDraftRequestBody */
+export interface CreateDraftRequestBody {
+  /** Draftname */
+  draftName: string;
+}
+
+/** DraftResponseBody */
+export interface DraftResponseBody {
+  /** Draftname */
+  draftName: string;
+  /**
+   * Userid
+   * @format uuid
+   */
+  userId: string;
+  /**
+   * Id
+   * @format uuid
+   */
+  id: string;
+  /**
+   * Createdat
+   * @format date-time
+   */
+  createdAt: string;
+  /**
+   * Updatedat
+   * @format date-time
+   */
+  updatedAt: string;
+  /** Closedat */
+  closedAt: string | null;
+}
+
 /** HTTPValidationError */
 export interface HTTPValidationError {
   /** Detail */
   detail?: ValidationError[];
+}
+
+/** Message */
+export interface Message {
+  /** Message */
+  message: string;
 }
 
 /** Token */
@@ -280,7 +320,7 @@ export class API<
      * @tags Authentication
      * @name RegisterApiV1AuthRegisterPost
      * @summary Register
-     * @request POST:/api/v1/auth/Register
+     * @request POST:/api/v1/auth/register
      */
     registerApiV1AuthRegisterPost: (
       data: UserRegister,
@@ -301,7 +341,7 @@ export class API<
      * @tags Authentication
      * @name LoginApiV1AuthLoginPost
      * @summary Login
-     * @request POST:/api/v1/auth/Login
+     * @request POST:/api/v1/auth/login
      */
     loginApiV1AuthLoginPost: (data: UserLogin, params: RequestParams = {}) =>
       this.request<Token, HTTPValidationError>({
@@ -319,7 +359,7 @@ export class API<
      * @tags Authentication
      * @name LogoutApiV1AuthLogoutPost
      * @summary Logout
-     * @request POST:/api/v1/auth/Logout
+     * @request POST:/api/v1/auth/logout
      */
     logoutApiV1AuthLogoutPost: (params: RequestParams = {}) =>
       this.request<any, any>({
@@ -340,6 +380,113 @@ export class API<
     getUserMeApiV1AuthMeGet: (params: RequestParams = {}) =>
       this.request<UserResponse, any>({
         path: `/api/v1/auth/me`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @name GetAllDraftsApiV1DraftAllGet
+     * @summary Get All Drafts
+     * @request GET:/api/v1/draft/all
+     */
+    getAllDraftsApiV1DraftAllGet: (params: RequestParams = {}) =>
+      this.request<DraftResponseBody[], any>({
+        path: `/api/v1/draft/all`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @name CreateDraftApiV1DraftPost
+     * @summary Create Draft
+     * @request POST:/api/v1/draft
+     */
+    createDraftApiV1DraftPost: (
+      data: CreateDraftRequestBody,
+      params: RequestParams = {},
+    ) =>
+      this.request<DraftResponseBody, HTTPValidationError>({
+        path: `/api/v1/draft`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @name GetDraftApiV1DraftDraftIdGet
+     * @summary Get Draft
+     * @request GET:/api/v1/draft/{draft_id}
+     */
+    getDraftApiV1DraftDraftIdGet: (
+      draftId: string,
+      params: RequestParams = {},
+    ) =>
+      this.request<DraftResponseBody, HTTPValidationError>({
+        path: `/api/v1/draft/${draftId}`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @name DeleteDraftApiV1DraftDraftIdDelete
+     * @summary Delete Draft
+     * @request DELETE:/api/v1/draft/{draft_id}
+     */
+    deleteDraftApiV1DraftDraftIdDelete: (
+      draftId: string,
+      params: RequestParams = {},
+    ) =>
+      this.request<any, HTTPValidationError>({
+        path: `/api/v1/draft/${draftId}`,
+        method: "DELETE",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @name ChatApiV1AiChatDraftIdPost
+     * @summary Chat
+     * @request POST:/api/v1/ai/chat/{draft_id}
+     */
+    chatApiV1AiChatDraftIdPost: (
+      draftId: string,
+      data: Message,
+      params: RequestParams = {},
+    ) =>
+      this.request<any, HTTPValidationError>({
+        path: `/api/v1/ai/chat/${draftId}`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @name ChatApiV1AiDraftIdGet
+     * @summary Chat
+     * @request GET:/api/v1/ai/{draft_id}
+     */
+    chatApiV1AiDraftIdGet: (draftId: string, params: RequestParams = {}) =>
+      this.request<any, HTTPValidationError>({
+        path: `/api/v1/ai/${draftId}`,
         method: "GET",
         format: "json",
         ...params,
