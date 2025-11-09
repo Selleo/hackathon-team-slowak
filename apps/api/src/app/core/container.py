@@ -33,4 +33,4 @@ class Container(DeclarativeContainer):
     draft_repository = providers.Factory(DraftRepository, db_session)
     draft_service = providers.Factory(DraftService, draft_repository)
 
-    ai_service = providers.Factory(AiService, draft_repository)
+    ai_service = providers.Singleton(AiService, draft_repository)

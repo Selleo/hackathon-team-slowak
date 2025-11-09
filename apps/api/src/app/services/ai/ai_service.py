@@ -1,3 +1,4 @@
+import asyncio
 import os
 import uuid
 
@@ -31,6 +32,8 @@ load_dotenv()
 
 
 class AiService:
+    _setup_lock = asyncio.Lock()
+
     def __init__(self, draft_repository: DraftRepository):
         url = os.getenv("DATABASE_URL")
         self.database_url = url.replace("postgresql+psycopg://", "postgresql://")
@@ -40,27 +43,32 @@ class AiService:
         self.conn = None
 
     async def setup_graph(self):
-        conn = await psycopg.AsyncConnection.connect(self.database_url, autocommit=True)
-        checkpointer = AsyncPostgresSaver(conn=conn)
-        await checkpointer.setup()
+        async with AiService._setup_lock:
+            if self.graph is not None:
+                return
+            conn = await psycopg.AsyncConnection.connect(
+                self.database_url, autocommit=True
+            )
+            checkpointer = AsyncPostgresSaver(conn=conn)
+            await checkpointer.setup()
 
-        builder = StateGraph(MessagesState)
+            builder = StateGraph(MessagesState)
 
-        builder.add_node("data_curator", data_curator)
-        builder.add_node("repeat_curator", repeat_curator)
-        builder.add_node("objective_architect", objective_architect)
-        builder.add_node("evaluator_oa", evaluator_oa)
-        builder.add_node("curriculum_designer", curriculum_designer)
-        builder.add_node("evaluator_cd", evaluator_cd)
-        # builder.add_node("evaluator_la", evaluator_la)
-        builder.add_node("lesson_author", lesson_author)
+            builder.add_node("data_curator", data_curator)
+            builder.add_node("repeat_curator", repeat_curator)
+            builder.add_node("objective_architect", objective_architect)
+            builder.add_node("evaluator_oa", evaluator_oa)
+            builder.add_node("curriculum_designer", curriculum_designer)
+            builder.add_node("evaluator_cd", evaluator_cd)
+            # builder.add_node("evaluator_la", evaluator_la)
+            builder.add_node("lesson_author", lesson_author)
 
-        builder.add_edge(START, "data_curator")
-        builder.add_edge("repeat_curator", "data_curator")
+            builder.add_edge(START, "data_curator")
+            builder.add_edge("repeat_curator", "data_curator")
 
-        self.conn = conn
+            self.conn = conn
 
-        self.graph = builder.compile(checkpointer=checkpointer)
+            self.graph = builder.compile(checkpointer=checkpointer)
 
     async def chat(self, current_user: UserResponse, message: str, draft_id: UUID):
         if not self.graph:

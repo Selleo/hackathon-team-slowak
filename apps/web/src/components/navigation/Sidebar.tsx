@@ -88,7 +88,7 @@ export const AppSidebar = () => {
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Avatar className="size-8">
-              <AvatarImage src="logo.png" alt="Luma logo" />
+              <AvatarImage src="/logo.png" alt="Luma logo" />
             </Avatar>
             <h1 className="text-lg font-bold">Luma</h1>
           </div>
