@@ -14,25 +14,6 @@ from src.app.services.ai.ai_service import AiService
 ai_router = APIRouter(prefix="/api/v1/ai")
 
 
-@ai_router.post("/chat/{draft_id}")
-@inject
-async def chat(
-    current_user: Annotated[UserResponse, Depends(get_current_user)],
-    draft_id: UUID,
-    message: Message,
-    ai_service: Annotated[AiService, Depends(Provide(Container.ai_service))],
-):
-    return StreamingResponse(
-        ai_service.chat(current_user, message.message, draft_id),
-        media_type="text/plain; charset=utf-8",
-        headers={
-            "X-Vercel-AI-Data-Stream": "v1",
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-        },
-    )
-
-
 @ai_router.get("/course-schema/{draft_id}")
 @inject
 async def get_course_schema(
@@ -52,6 +33,25 @@ async def export_to_lms(
     ai_service: Annotated[AiService, Depends(Provide(Container.ai_service))],
 ):
     return await ai_service.export_to_lms(current_user, auth_data, draft_id)
+
+
+@ai_router.post("/chat/{draft_id}")
+@inject
+async def chat(
+    current_user: Annotated[UserResponse, Depends(get_current_user)],
+    draft_id: UUID,
+    message: Message,
+    ai_service: Annotated[AiService, Depends(Provide(Container.ai_service))],
+):
+    return StreamingResponse(
+        ai_service.chat(current_user, message.message, draft_id),
+        media_type="text/plain; charset=utf-8",
+        headers={
+            "X-Vercel-AI-Data-Stream": "v1",
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        },
+    )
 
 
 @ai_router.get("/{draft_id}")

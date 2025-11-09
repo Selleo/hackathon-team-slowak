@@ -4,7 +4,7 @@ import { ApiClient } from "@/app/api/api-client.ts";
 export const courseSchemaQueryOptions = (draftId?: string) =>
   queryOptions({
     enabled: !!draftId,
-    queryKey: ["course-schema", { courseSchemaQueryOptions }],
+    queryKey: ["course-schema", { draftId }],
     queryFn: async () => {
       const response =
         await ApiClient.api.getCourseSchemaApiV1AiCourseSchemaDraftIdGet(

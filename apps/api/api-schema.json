@@ -263,54 +263,6 @@
         }
       }
     },
-    "/api/v1/ai/chat/{draft_id}": {
-      "post": {
-        "summary": "Chat",
-        "operationId": "chat_api_v1_ai_chat__draft_id__post",
-        "parameters": [
-          {
-            "name": "draft_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Draft Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Message"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/ai/course-schema/{draft_id}": {
       "get": {
         "summary": "Get Course Schema",
@@ -371,6 +323,54 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/AuthData"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ai/chat/{draft_id}": {
+      "post": {
+        "summary": "Chat",
+        "operationId": "chat_api_v1_ai_chat__draft_id__post",
+        "parameters": [
+          {
+            "name": "draft_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Draft Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Message"
               }
             }
           }

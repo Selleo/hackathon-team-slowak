@@ -1,29 +1,27 @@
 import { useMutation } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
 import { ApiClient } from "@/app/api/api-client.ts";
 import { toast } from "sonner";
-import type { UserLogin } from "@/app/api/generated-api.ts";
 
 export type ExportLMSOptions = {
   draftId: string;
   email: string;
   password: string;
-}
+};
 
 export default function useExportLms() {
-  const navigate = useNavigate();
-
   return useMutation({
     mutationFn: async (options: ExportLMSOptions) => {
-      const response = await ApiClient.api.(options);
+      const response = await ApiClient.api.exportToLmsApiV1AiExportDraftIdPost(
+        options.draftId,
+        { email: options.email, password: options.password },
+      );
       return response.data;
     },
     onSuccess: () => {
-      toast.success("You've been successfully logged in!");
-      navigate("/home");
+      toast.success("Course successfully exported");
     },
     onError: () => {
-      toast.error("Login failed. Please check your credentials and try again.");
+      toast.error("Export failed.");
     },
   });
 }

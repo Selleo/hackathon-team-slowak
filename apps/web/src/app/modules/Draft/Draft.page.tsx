@@ -21,8 +21,9 @@ import {
 } from "@/components/ui/dialog.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { useCourseSchema } from "@/app/api/queries/useCourseSchema.ts";
+import { queryClient } from "@/app/api/queryClient.ts";
 import useExportLms from "@/app/api/mutations/useExportLms.ts";
-import type { UseMutateAsyncFunction } from "@tanstack/react-query";
+import { useDraft } from "@/app/api/queries/useDraft.ts";
 
 const AgentTypingAnimation = () => (
   <>
@@ -116,8 +117,12 @@ const SchemaDialog = ({
         </DialogHeader>
         <Textarea
           readOnly
-          value={data ?? "Here is your generated schema"}
-          className="min-h-96 resize-none"
+          value={
+            data
+              ? JSON.stringify(data, null, 2)
+              : "Here is your generated schema"
+          }
+          className="min-h-96 max-h-96 overflow-y-scroll maxresize-none"
         />
       </DialogContent>
     </Dialog>
@@ -130,14 +135,18 @@ interface ExportToLmsDialogProps {
   draftId: string;
 }
 
-const ExportToLmsDialog = ({ open, onOpenChange }: ExportToLmsDialogProps) => {
+const ExportToLmsDialog = ({
+  open,
+  onOpenChange,
+  draftId,
+}: ExportToLmsDialogProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const { mutateAsync: exportToLMS } = useExportLms();
 
-  const handleConfirm = () => {
-    exportToLMS();
+  const handleConfirm = async () => {
+    await exportToLMS({ draftId, email, password });
     setEmail("");
     setPassword("");
     onOpenChange(false);
@@ -181,6 +190,11 @@ type DraftMessage = { type: string; content: string };
 export const DraftPage = () => {
   const { draftId } = useParams();
 
+  useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: ["draftMessages", { draftId }] });
+  }, [draftId]);
+
+  const { data: draft } = useDraft(draftId);
   const {
     data: draftMessages,
     error,
@@ -237,11 +251,11 @@ export const DraftPage = () => {
     navigate("/");
   }
 
-  const isSubmitted = status === "submitted";
+  const isSubmitted = status === "submitted" || status === "streaming";
 
   return (
     <>
-      <h1 className="text-2xl font-bold">Example Draft Title</h1>
+      <h1 className="text-2xl font-bold">{draft?.draftName}</h1>
       <div className="flex-1 flex flex-col justify-start items-center overflow-y-scroll h-full max-h-4/6 gap-2">
         {!isLoading &&
           messages.map((msg, idx) => (
@@ -267,7 +281,7 @@ export const DraftPage = () => {
       <ExportToLmsDialog
         open={exportLMS}
         onOpenChange={setExportLMS}
-        onConfirm={exportToLMS}
+        draftId={draftId ?? ""}
       />
 
       <div className="flex flex-col w-full border-t border-sidebar-border p-4 bg-background gap-2">
@@ -291,9 +305,10 @@ export const DraftPage = () => {
           <ButtonGroup>
             <Button
               variant="outline"
+              onClick={() => setExportLMS(true)}
               className="bg-foreground text-background rounded-2xl px-4 py-2 font-medium hover:bg-secondary cursor-pointer transition-colors"
             >
-              Mark as completed
+              Export to LMS
             </Button>
             <Button
               variant="outline"

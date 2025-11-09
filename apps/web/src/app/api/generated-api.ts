@@ -10,6 +10,14 @@
  * ---------------------------------------------------------------
  */
 
+/** AuthData */
+export interface AuthData {
+  /** Email */
+  email: string;
+  /** Password */
+  password: string;
+}
+
 /** CreateDraftRequestBody */
 export interface CreateDraftRequestBody {
   /** Draftname */
@@ -452,6 +460,45 @@ export class API<
       this.request<any, HTTPValidationError>({
         path: `/api/v1/draft/${draftId}`,
         method: "DELETE",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @name GetCourseSchemaApiV1AiCourseSchemaDraftIdGet
+     * @summary Get Course Schema
+     * @request GET:/api/v1/ai/course-schema/{draft_id}
+     */
+    getCourseSchemaApiV1AiCourseSchemaDraftIdGet: (
+      draftId: string,
+      params: RequestParams = {},
+    ) =>
+      this.request<any, HTTPValidationError>({
+        path: `/api/v1/ai/course-schema/${draftId}`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @name ExportToLmsApiV1AiExportDraftIdPost
+     * @summary Export To Lms
+     * @request POST:/api/v1/ai/export/{draft_id}
+     */
+    exportToLmsApiV1AiExportDraftIdPost: (
+      draftId: string,
+      data: AuthData,
+      params: RequestParams = {},
+    ) =>
+      this.request<any, HTTPValidationError>({
+        path: `/api/v1/ai/export/${draftId}`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
         format: "json",
         ...params,
       }),

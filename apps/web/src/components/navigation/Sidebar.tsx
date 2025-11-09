@@ -62,6 +62,7 @@ import {
 import { Button } from "@/components/ui/button.tsx";
 import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 import useCreateDraft from "@/app/api/mutations/useCreateDraft.ts";
+import { useCurrentUserStore } from "@/app/modules/Auth/useCurrentUserStore.ts";
 
 export const AppSidebar = () => {
   const [searchQuery, setSearchQuery] = useState("");

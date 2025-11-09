@@ -1,4 +1,5 @@
 import os
+import uuid
 
 import httpx
 from fastapi import HTTPException
@@ -130,9 +131,107 @@ class AiService:
         if not draft or draft.userId != current_user.id:
             raise HTTPException(status_code=404, detail="NOT_FOUND")
 
-        access_token = httpx.post(
-            "http://localhost:3000/api/auth/login",
-            data={"email": auth_data.email, "password": auth_data.password},
-        ).cookies
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                url="http://localhost:3000/api/auth/login",
+                data={"email": auth_data.email, "password": auth_data.password},
+            )
 
-        return access_token
+        if response.status_code != 201:
+            raise HTTPException(status_code=response.status_code, detail=response.text)
+
+        access_token = response.cookies.get("access_token")
+        headers = {"Authorization": f"Bearer {access_token}"}
+
+        config = {"configurable": {"thread_id": draft_id.hex}}
+
+        last_state = await self.graph.aget_state(config)
+
+        course = last_state.values.get("course")
+
+        if not course:
+            raise HTTPException(status_code=400, detail="NO_COURSE_SCHEMA_CREATED")
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                url="http://localhost:3000/api/category",
+                data={"title": (draft.draftName + uuid.uuid4().hex)[:100]},
+                headers=headers,
+            )
+
+            if response.status_code != 201:
+                raise HTTPException(
+                    status_code=response.status_code, detail=response.text
+                )
+
+            category = response.json().get("data").get("id")
+
+            response = await client.post(
+                url="http://localhost:3000/api/course",
+                data={
+                    "title": course.get("title", "")[:100],
+                    "description": course.get("description"),
+                    "categoryId": category,
+                },
+                headers=headers,
+            )
+
+            if response.status_code != 201:
+                raise HTTPException(
+                    status_code=response.status_code, detail=response.text
+                )
+
+            course_id = response.json().get("data").get("id")
+
+            for chapter in course.get("chapters"):
+                response = await client.post(
+                    url="http://localhost:3000/api/chapter/beta-create-chapter",
+                    data={
+                        "courseId": course_id,
+                        "title": chapter.get("title", "")[:100],
+                    },
+                    headers=headers,
+                )
+
+                if response.status_code != 201:
+                    raise HTTPException(
+                        status_code=response.status_code, detail=response.text
+                    )
+
+                chapter_id = response.json().get("data").get("id")
+
+                for lesson in chapter.get("lessons"):
+                    if lesson.get("type") == "ai_mentor":
+                        response = await client.post(
+                            url="http://localhost:3000/api/lesson/beta-create-lesson/ai",
+                            data={
+                                "chapterId": chapter_id,
+                                "title": lesson.get("title", "")[:100],
+                                "aiMentorInstructions": lesson.get(
+                                    "ai_mentor_instructions"
+                                ),
+                                "completionConditions": lesson.get(
+                                    "ai_completion_conditions"
+                                ),
+                                "type": lesson.get("mentor_type"),
+                            },
+                            headers=headers,
+                        )
+                    # else:
+                    #     response = await client.post(
+                    #         url="http://localhost:3000/api/lesson/beta-create-lesson",
+                    #         data={
+                    #             "chapterId": chapter_id,
+                    #             "title": lesson.get("title", "")[:100],
+                    #             "description": lesson.get("content"),
+                    #             "type": lesson.get("type"),
+                    #         },
+                    #         headers=headers,
+                    #     )
+
+                    if response.status_code not in [200, 201]:
+                        raise HTTPException(
+                            status_code=response.status_code, detail=response.text
+                        )
+
+        return {"message": "Exported course"}
