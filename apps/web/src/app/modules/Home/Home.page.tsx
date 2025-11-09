@@ -1,3 +1,8 @@
 export const HomePage = () => {
-  return <div className="flex h-screen"></div>;
+  return (
+    <>
+      <h1>Home page</h1>
+      <h2>Underegoing construction</h2>
+    </>
+  );
 };
