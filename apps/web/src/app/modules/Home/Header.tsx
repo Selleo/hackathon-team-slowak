@@ -12,8 +12,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import { useCurrentUserStore } from "@/app/modules/Auth/useCurrentUserStore.ts";
 
 export const AppHeader = () => {
+  const { currentUser } = useCurrentUserStore();
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 items-center gap-4 px-4">
@@ -53,10 +55,12 @@ export const AppHeader = () => {
               <button className="flex items-center gap-2 p-1 pr-2 hover:bg-accent rounded-md transition-colors">
                 <Avatar className="size-8">
                   <AvatarImage src="avatar.png" />
-                  <AvatarFallback>JA</AvatarFallback>
+                  <AvatarFallback>
+                    {currentUser?.username.at(0)?.toUpperCase()}
+                  </AvatarFallback>
                 </Avatar>
                 <span className="hidden md:block text-sm font-medium">
-                  John Appleseed
+                  {currentUser?.username}
                 </span>
               </button>
             </DropdownMenuTrigger>

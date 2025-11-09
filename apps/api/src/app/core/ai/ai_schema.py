@@ -1,8 +1,13 @@
 import operator
-from typing import Annotated, List, Optional, Literal, TypedDict
+from typing import Annotated, List, Optional, Literal, TypedDict, Any
 
 from langchain_core.messages import AnyMessage
 from pydantic import BaseModel
+
+
+class AuthData(BaseModel):
+    email: str
+    password: str
 
 
 class DataCuratorOutput(TypedDict):

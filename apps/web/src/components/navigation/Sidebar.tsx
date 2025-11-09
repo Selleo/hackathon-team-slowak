@@ -62,6 +62,7 @@ import {
 import { Button } from "@/components/ui/button.tsx";
 import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 import useCreateDraft from "@/app/api/mutations/useCreateDraft.ts";
+import { useCurrentUserStore } from "@/app/modules/Auth/useCurrentUserStore.ts";
 
 export const AppSidebar = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -79,6 +80,7 @@ export const AppSidebar = () => {
     setDraftTitle("");
     setIsDialogOpen(false);
   };
+  const { currentUser } = useCurrentUserStore();
 
   return (
     <Sidebar className="border-r">
@@ -218,12 +220,16 @@ export const AppSidebar = () => {
             <button className="flex items-center gap-3 w-full flex-1 px-3 py-2 rounded-lg hover:bg-accent transition-colors">
               <Avatar className="size-9">
                 <AvatarImage src="avatar.png" />
-                <AvatarFallback>JA</AvatarFallback>
+                <AvatarFallback>
+                  {currentUser?.username.at(0)?.toUpperCase()}
+                </AvatarFallback>
               </Avatar>
               <div className="flex-1 text-left min-w-0">
-                <p className="text-sm font-semibold truncate">John Appleseed</p>
+                <p className="text-sm font-semibold truncate">
+                  {currentUser?.username}
+                </p>
                 <p className="text-xs text-muted-foreground truncate">
-                  John@appleseed.com
+                  {currentUser?.email}
                 </p>
               </div>
               <Settings className="size-4 text-muted-foreground" />
