@@ -1,4 +1,6 @@
 import os
+
+import httpx
 from fastapi import HTTPException
 from uuid import UUID
 
@@ -10,7 +12,6 @@ from langgraph.constants import START
 from langgraph.graph import StateGraph
 from langgraph.types import Command
 
-import json
 
 from src.app.core.ai.ai_agent import (
     data_curator,
@@ -21,7 +22,7 @@ from src.app.core.ai.ai_agent import (
     evaluator_cd,
     lesson_author,
 )
-from src.app.core.ai.ai_schema import MessagesState
+from src.app.core.ai.ai_schema import MessagesState, AuthData
 from src.app.repositories.draft.draft_repository import DraftRepository
 from src.app.schemas.auth_schemas import UserResponse
 
@@ -38,7 +39,7 @@ class AiService:
         self.conn = None
 
     async def setup_graph(self):
-        conn = await psycopg.AsyncConnection.connect(self.database_url)
+        conn = await psycopg.AsyncConnection.connect(self.database_url, autocommit=True)
         checkpointer = AsyncPostgresSaver(conn=conn)
         await checkpointer.setup()
 
@@ -95,10 +96,43 @@ class AiService:
         draft = await self.draft_repository.get_draft(draft_id)
 
         if not draft or draft.userId != current_user.id:
-            raise HTTPException(status_code=404, detail="DRAFT_NOT_FOUND")
+            return []
 
         config = {"configurable": {"thread_id": draft_id.hex}}
 
         last_state = await self.graph.aget_state(config)
 
         return last_state.values.get("messages")
+
+    async def get_course_schema(self, current_user: UserResponse, draft_id: UUID):
+        if not self.graph:
+            await self.setup_graph()
+
+        draft = await self.draft_repository.get_draft(draft_id)
+
+        if not draft or draft.userId != current_user.id:
+            raise HTTPException(status_code=404, detail="NOT_FOUND")
+
+        config = {"configurable": {"thread_id": draft_id.hex}}
+
+        last_state = await self.graph.aget_state(config)
+
+        return last_state.values.get("course")
+
+    async def export_to_lms(
+        self, current_user: UserResponse, auth_data: AuthData, draft_id: UUID
+    ):
+        if not self.graph:
+            await self.setup_graph()
+
+        draft = await self.draft_repository.get_draft(draft_id)
+
+        if not draft or draft.userId != current_user.id:
+            raise HTTPException(status_code=404, detail="NOT_FOUND")
+
+        access_token = httpx.post(
+            "http://localhost:3000/api/auth/login",
+            data={"email": auth_data.email, "password": auth_data.password},
+        ).cookies
+
+        return access_token
