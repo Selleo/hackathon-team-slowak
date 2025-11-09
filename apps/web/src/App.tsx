@@ -13,6 +13,7 @@ import { RegisterPage } from "@/app/modules/Register/Register.page.tsx";
 import HomeLayout from "@/app/modules/Home/Home.layout.tsx";
 import { Toaster } from "@/components/ui/sonner.tsx";
 import { ProtectedRoute } from "@/app/modules/Auth/ProtectedRoute.tsx";
+import { DraftPage } from "@/app/modules/Draft/Draft.page.tsx";
 
 function App() {
   return (
@@ -31,16 +32,7 @@ function App() {
             }
           >
             <Route path="/home" element={<HomePage />} />
-            <Route
-              path="/draft/:draftId"
-              element={
-                <div>
-                  <h1>Koneser ziemniaków</h1>
-                  <h2>Uwielbiam ziemniaki</h2>
-                  <h3>Nie nie jestem naćpany</h3>
-                </div>
-              }
-            />
+            <Route path="/draft/:draftId" element={<DraftPage />} />
           </Route>
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
