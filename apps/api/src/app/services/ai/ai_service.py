@@ -217,17 +217,17 @@ class AiService:
                             },
                             headers=headers,
                         )
-                    # else:
-                    #     response = await client.post(
-                    #         url="http://localhost:3000/api/lesson/beta-create-lesson",
-                    #         data={
-                    #             "chapterId": chapter_id,
-                    #             "title": lesson.get("title", "")[:100],
-                    #             "description": lesson.get("content"),
-                    #             "type": lesson.get("type"),
-                    #         },
-                    #         headers=headers,
-                    #     )
+                    else:
+                        response = await client.post(
+                            url="http://localhost:3000/api/lesson/beta-create-lesson",
+                            data={
+                                "chapterId": chapter_id,
+                                "title": lesson.get("title", "")[:100],
+                                "description": lesson.get("content"),
+                                "type": lesson.get("type"),
+                            },
+                            headers=headers,
+                        )
 
                     if response.status_code not in [200, 201]:
                         raise HTTPException(
