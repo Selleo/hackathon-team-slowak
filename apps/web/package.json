@@ -11,6 +11,7 @@
     "generate:client": "swagger-typescript-api generate -p ../api/api-schema.json -o ./src/app/api --axios --name generated-api.ts --api-class-name API"
   },
   "dependencies": {
+    "@ai-sdk/react": "1.2.12",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-collapsible": "^1.1.12",

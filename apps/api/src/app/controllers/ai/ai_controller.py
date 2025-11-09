@@ -5,13 +5,34 @@ from dependency_injector.wiring import inject, Provide
 from fastapi import APIRouter, Depends
 from starlette.responses import StreamingResponse
 
-from src.app.core.ai.ai_schema import Message
+from src.app.core.ai.ai_schema import Message, AuthData
 from src.app.core.container import Container
 from src.app.jwt.jwt_strategy import get_current_user
 from src.app.schemas.auth_schemas import UserResponse
 from src.app.services.ai.ai_service import AiService
 
 ai_router = APIRouter(prefix="/api/v1/ai")
+
+
+@ai_router.get("/course-schema/{draft_id}")
+@inject
+async def get_course_schema(
+    current_user: Annotated[UserResponse, Depends(get_current_user)],
+    draft_id: UUID,
+    ai_service: Annotated[AiService, Depends(Provide(Container.ai_service))],
+):
+    return await ai_service.get_course_schema(current_user, draft_id)
+
+
+@ai_router.post("/export/{draft_id}")
+@inject
+async def export_to_lms(
+    current_user: Annotated[UserResponse, Depends(get_current_user)],
+    auth_data: AuthData,
+    draft_id: UUID,
+    ai_service: Annotated[AiService, Depends(Provide(Container.ai_service))],
+):
+    return await ai_service.export_to_lms(current_user, auth_data, draft_id)
 
 
 @ai_router.post("/chat/{draft_id}")

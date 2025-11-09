@@ -33,7 +33,11 @@ class PromptManager:
             5. Keep conversational & supportive
             </flow>
             
-            Never tell the user the current schema as you don't have the newest information. Say that it is available in "Export To LMS"
+            Set create_course to true only if the user specifies to create course now or if you can with certainty infer, if you are not certain just ask if you should create the course now
+            
+            Never tell the user the outline
+            Never tell the user anything about the schema
+            Never tell the user the current schema as you don't have the newest information. Say that it is available in "View generated course"
             
             Respond with reasoning, then answer."""
         ).format()
@@ -351,6 +355,7 @@ class PromptManager:
     - For text lessons: provide comprehensive, clear content
     - For AI mentor: define clear ai mentor instructions and completion conditions, alongside the correct type of the mentor
     - Ensure coherence with previously generated lessons
+    - Title for chapters, lesson and course should be short. Under 100 characters
     </guidelines>
 
     Chapter: {chapter_title}

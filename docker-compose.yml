@@ -3,7 +3,7 @@ services:
     image: redis:8.0
     restart: always
     ports:
-      - 6379:6379
+      - 6380:6379
     volumes:
       - luma-redis-data:/data
     healthcheck:
@@ -21,7 +21,7 @@ services:
     volumes:
       - luma-db-data:/var/lib/postgresql/data
     ports:
-      - 5432:5432
+      - 5433:5432
 
 volumes:
   luma-redis-data:
