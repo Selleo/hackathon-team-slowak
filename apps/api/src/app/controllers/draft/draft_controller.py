@@ -12,7 +12,6 @@ from src.app.schemas.draft_schemas import (
     DraftResponseBody,
 )
 from src.app.services.draft.draft_service import DraftService
-from src.db.models import Draft
 
 draft_router = APIRouter(prefix="/api/v1/draft")
 

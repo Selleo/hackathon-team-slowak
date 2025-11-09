@@ -2,11 +2,16 @@ import operator
 from typing import Annotated, List, Optional, Literal, TypedDict
 
 from langchain_core.messages import AnyMessage
+from pydantic import BaseModel
 
 
 class DataCuratorOutput(TypedDict):
     message: Annotated[str, "Agent output message"]
     gather_more_info: Annotated[bool, "True if you need more info, otherwise false"]
+    create_course: Annotated[
+        bool,
+        "True if user intent is to create a course, false if user just wants to talk",
+    ]
 
 
 class Objective(TypedDict):
@@ -58,11 +63,6 @@ class EvaluatorData(TypedDict):
 class LessonTemplate(TypedDict):
     type: Annotated[
         Literal[
-            "brief_response",
-            "single_choice",
-            "true_or_false",
-            "multiple_choice",
-            "detailed_response",
             "text",
             "ai_mentor",
         ],
@@ -95,93 +95,62 @@ class Syllabus(TypedDict):
     ]
 
 
-class AiMentorLesson(TypedDict):
-    ai_mentor_instructions: Annotated[str, "Instructions for the AI Mentor"]
-    completion_conditions: Annotated[
-        str,
-        "Completion conditions for the lesson (bulletpoints for conditions and also add threshold for approval by ai judge)",
-    ]
+class Lesson(BaseModel):
     type: Annotated[
-        Literal["roleplay", "mentor", "teacher"],
-        "Roleplay plays out a scenario, mentor is a mix between teacher and roleplay, teacher aims to teach",
-    ]
-
-
-class QuestionAnswerOptions(TypedDict):
-    option_text: Annotated[str, "The answer option text"]
-    is_correct: Annotated[bool, "Whether the option is correct"]
-    display_order: Annotated[int, "Order of the option in the question"]
-
-
-class Question(TypedDict):
-    type: Annotated[
-        Literal[
-            "brief_response",
-            "single_choice",
-            "true_or_false",
-            "multiple_choice",
-            "detailed_response",
-        ],
-        "Types of questions",
-    ]
-
-    title: Annotated[str, "Question asked"]
-    description: Annotated[
-        str, "Description of the question. Only for detailed_response"
-    ]
-    display_order: Annotated[int, "Order of the question in the lesson (unique)"]
-
-    question_answer_options: Annotated[
-        List[QuestionAnswerOptions],
-        "The answers for the question. Only one for true or false",
-    ]
-
-
-class Quiz(TypedDict):
-    questions: Annotated[List[Question], "List of questions for the quiz"]
-
-
-class Lesson(TypedDict):
-    type: Annotated[
-        Literal["ai_mentor", "text", "quiz"],
+        Literal["ai_mentor", "text"],
         "type of lesson, based on the type of the lesson other dependencies are filled",
     ]
     title: Annotated[str, "Title of the lesson"]
-    description: Annotated[str, "Content of the lesson [ONLY APPLIES TO TEXT TYPE]"]
+    content: Annotated[
+        str,
+        "Content of the text lesson",
+    ]
     display_order: Annotated[
         int, "index of the display of the lesson in the chapter (unique)"
     ]
 
-    ai_mentor: Annotated[
-        AiMentorLesson | None, "Fill in case of lesson type = ai_mentor"
+    ai_mentor_instructions: Annotated[
+        str, "Instructions for the AI Mentor. Only include if lesson type is AI mentor"
     ]
-    quiz: Annotated[Quiz | None, "Fill in the case of lesson type = quiz"]
+
+    ai_completion_conditions: Annotated[
+        str,
+        "Completion conditions for the lesson (bulletpoints for conditions and also add threshold for approval by ai judge). Should be empty if lesson is not ai mentor",
+    ]
+    mentor_type: Annotated[
+        Literal["roleplay", "mentor", "teacher"],
+        "Roleplay plays out a scenario, mentor is a mix between teacher and roleplay, teacher aims to teach. It's empty if lesson type is not ai mentor",
+    ]
 
 
-class Chapter(TypedDict):
+class Chapter(BaseModel):
     lesson_count: Annotated[int, "amount of lessons in chapter"]
     display_order: Annotated[int, "index of display in course (unique)"]
-    is_freemium: Annotated[
-        bool,
-        "whether the lesson is available without course enrollment (mostly for demo lessons)",
-    ]
     title: Annotated[str, "title of chapter"]
 
     lessons: List[Lesson]
 
 
-class Course(TypedDict):
+class ChapterOutput(BaseModel):
+    lesson_count: Annotated[int, "amount of lessons in chapter"]
+    title: Annotated[str, "title of chapter"]
+
+
+class CourseOutput(BaseModel):
     title: Annotated[str, "Title of the course"]
     description: Annotated[str, "Description of the course"]
     chapter_count: Annotated[int, "Count of chapters in course"]
-    has_certificate: Annotated[bool, "Whether the course supplies a certificate"]
+
+
+class Course(BaseModel):
+    title: Annotated[str, "Title of the course"]
+    description: Annotated[str, "Description of the course"]
+    chapter_count: Annotated[int, "Count of chapters in course"]
     chapters: Annotated[List[Chapter], "Chapters for the course"]
 
 
 class CourseRevision(TypedDict):
     course: Course
-    reason: str
-    feedback: str
 
 
 class MessagesState(TypedDict):
@@ -189,5 +158,9 @@ class MessagesState(TypedDict):
     analyzed_data: Optional[AnalyzedData]
     evaluator: Optional[EvaluatorData]
     syllabus: Optional[Syllabus]
-    course: Optional[CourseRevision]
+    course: Optional[Course]
     llm_calls: Optional[int]
+
+
+class Message(BaseModel):
+    message: str

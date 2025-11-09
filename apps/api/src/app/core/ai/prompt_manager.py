@@ -32,9 +32,11 @@ class PromptManager:
             4. Confirm all before proceeding
             5. Keep conversational & supportive
             </flow>
-        
+            
+            Never tell the user the current schema as you don't have the newest information. Say that it is available in "Export To LMS"
+            
             Respond with reasoning, then answer."""
-        )
+        ).format()
 
     @staticmethod
     def get_objective_architect_prompt(information_list: str = "", feedback: str = ""):
@@ -151,7 +153,7 @@ class PromptManager:
     Chapters: 2-6 total, 1-2 objectives each, action-oriented titles
     Bloom progression: Strict increase across chapters (Ch 1-2: Bloom 1-2, Ch 3-4: Bloom 3-4, Ch 5-6: Bloom 5-6)
     Lessons per chapter: 3-5 (balanced)
-    Type mix: 40-50% text, 30-40% ai_mentor, 20-30% quiz
+    Type mix: 40-50% text, 30-50% ai_mentor,
     Total lessons: Beginner 12-18, Intermediate 18-24, Advanced 24-30 (adjust by time constraint)
     </design>
 
@@ -159,13 +161,10 @@ class PromptManager:
     Time: <4w→2-3 ch/12 les | 4-8w→3-4 ch/15-20 les | >8w→4-6 ch/20-30 les
     Scope: Apply lesson limits and content focus (e.g., "advanced only"→skip Bloom 1-2)
     Audience: No prior knowledge→include Bloom 1-2 chapter; Experienced→start at Bloom 3+
-    Technology: No interactives→reduce ai_mentor, increase quizzes
     </constraints>
 
     <lesson_types>
-    Bloom 1-2: true_or_false, single_choice, text
-    Bloom 3-4: multiple_choice, brief_response, single_choice
-    Bloom 5-6: detailed_response, multiple_choice (complex scenarios), ai_mentor
+        ai_mentor and text
     </lesson_types>
 
     <validation>
@@ -244,66 +243,134 @@ class PromptManager:
         ).to_string()
 
     @staticmethod
-    def get_lesson_author_prompt(syllabus: str = ""):
+    def get_course_output_prompt(syllabus: Syllabus) -> str:
+        syllabus_text = PromptManager._format_syllabus(syllabus)
         return (
             PromptTemplate.from_template(
-                """<role>Lesson Author</role>
-    <purpose>Convert lesson outlines into fully-authored content aligned to Bloom's taxonomy and learning objectives.</purpose>
+                """<role>Course Generator</role>
+    <purpose>You are responsible for creating the course. Transform syllabus into minimal course metadata.</purpose>
 
-    <content_types>
-    Text lessons: 200-1000 words | Include hook, 3-5 sections, worked example, key takeaways, practice prompt
-    AI mentor: Scenario setup, initial prompt, tiered hints, correct path, extension, completion criteria
-    Quiz: 2-6 questions with context, options, correct answer, explanations, rubric for detailed-response
-    </content_types>
-
-    <bloom_mapping>
-    Bloom 1-2 (Remember/Understand):
-    - Text: Definitions, diagrams, basic explanations (200-400w, clear/direct language)
-    - AI: Leading questions, recall hints (e.g., "What's the first step? (Hint: involves...)")
-    - Quiz: True/False, single-choice (3-5 questions, one concept each)
-
-    Bloom 3-4 (Apply/Analyze):
-    - Text: Scenarios, case studies, comparisons (400-700w, analytical language)
-    - AI: Apply concepts to scenarios, corrective feedback (e.g., "Which method for this dataset?")
-    - Quiz: Multiple-choice complex stems, brief-response (4-6 questions, misconception distractors)
-
-    Bloom 5-6 (Evaluate/Create):
-    - Text: Complex scenarios, design challenges (600-1000w, evaluative/conditional language)
-    - AI: Real-world dilemmas, challenge reasoning (e.g., "Design with X/Y trade-offs")
-    - Quiz: Detailed-response with rubric (2-4 questions, scenario-based)
-    </bloom_mapping>
+    <responsibility>
+    You own the entire course creation process. Extract key information from the syllabus and generate the CourseOutput structure that will serve as the foundation for all subsequent course development.
+    </responsibility>
 
     <guidelines>
-    - Concreteness: Real-world examples early → abstract/theoretical later
-    - Progression: Examples go concrete → abstract; Bloom increases across chapters
-    - Accessibility: Plain language, 15-20 word sentences, active voice, jargon defined
-    - Assessment: Quiz questions test specific lesson objectives, match Bloom levels
-    - AI mentor: Provide scaffolding without giving answers; include measurable completion criteria
-    - Worked examples: Bloom 3-4 include step-by-step solutions; Bloom 4-5 show contrasts (what works/doesn't)
+    - Title: Concise, action-oriented, reflects syllabus scope
+    - Description: Capture learning goals and target audience
+    - Chapter count: Match the number of chapters in the syllabus
     </guidelines>
 
+    Input Syllabus:
+    {syllabus}
+
+    Output only valid JSON with CourseOutput schema."""
+            )
+            .invoke({"syllabus": syllabus_text})
+            .to_string()
+        )
+
+    @staticmethod
+    def _format_syllabus(syllabus: Syllabus) -> str:
+        """Format Syllabus TypedDict into readable text for prompts."""
+        lines = []
+        lines.append(f"Reason: {syllabus.get('reason', '')}")
+        lines.append(f"Feedback: {syllabus.get('feedback', '')}\n")
+
+        chapters = syllabus.get("chapters", [])
+        lines.append(f"Total Chapters: {len(chapters)}\n")
+
+        for i, chapter in enumerate(chapters, 1):
+            lines.append(f"Chapter {i}: {chapter.get('overview', '')}")
+            lines.append(f"  - Bloom Level: {chapter.get('bloom', 1)}")
+            lines.append(f"  - Difficulty: {chapter.get('difficulty', 'medium')}")
+
+            lessons = chapter.get("lessons", [])
+            lines.append(f"  - Lessons ({len(lessons)}):")
+            for j, lesson in enumerate(lessons, 1):
+                lines.append(
+                    f"    {j}. {lesson.get('overview', '')} (Type: {lesson.get('type', 'text')}, Bloom: {lesson.get('bloom', 1)})"
+                )
+            lines.append("")
+
+        return "\n".join(lines)
+
+    @staticmethod
+    def get_chapter_output_prompt(
+        syllabus: Syllabus, course_output: dict = None, previous_chapters: str = ""
+    ) -> str:
+        syllabus_text = PromptManager._format_syllabus(syllabus)
+        template = PromptTemplate.from_template(
+            """<role>Course Generator</role>
+    <purpose>You are responsible for creating the course chapters.</purpose>
+
     <output>
-    Course object:
-    - title, description (2-3 sentences)
-    - chapters: [title, display_order, is_freemium (true for ch 1), lessons]
-    - lessons: [type, title, description (full content), display_order, ai_mentor (if type=ai_mentor), quiz (if type=quiz)]
-    - reason (2-3 sentences)
-    - feedback (clarity, Bloom alignment, assessment quality)
+    Return a JSON object matching Chapter:
+    {{
+      "lesson_count": <integer 3-8>,
+      "display_order": <integer>,
+      "title": "<descriptive chapter title>"
+    }}
     </output>
 
-    <validation>
-    ✓ Content reflects Bloom level (language, complexity, examples)
-    ✓ Quiz questions match Bloom levels
-    ✓ Examples progress concrete → abstract
-    ✓ AI mentor scaffolds appropriately
-    ✓ All learning outcomes addressed
-    ✓ Assessment aligned to objectives
-    ✓ Language clear, jargon defined, examples inclusive
-    </validation>
+    <guidelines>
+    - lesson_count: Infer from syllabus complexity (typically 3-8 lessons per chapter)
+    - display_order: Sequential numbering starting from 1
+    - title: Action-oriented, reflects learning progression
+    </guidelines>
 
-    Input Syllabus: {syllabus}"""
+    Course: {course_title}
+    Total Chapters: {chapter_count}
+    Previously Generated Chapters:{previous_chapters}
+    Input Syllabus: {syllabus}
+
+    Output only valid JSON."""
+        )
+        return template.format(
+            syllabus=syllabus_text,
+            course_title=course_output.get("title", "") if course_output else "",
+            chapter_count=course_output.get("chapter_count", 0) if course_output else 0,
+            previous_chapters=previous_chapters or " None yet",
+        )
+
+    @staticmethod
+    def get_lesson_output_prompt(
+        syllabus: Syllabus, chapter: dict, previous_lessons: str = ""
+    ) -> str:
+        return (
+            PromptTemplate.from_template(
+                """<role>Course Generator</role>
+    <purpose>You are responsible for creating individual lessons within a chapter. Transform chapter outlines into detailed lesson structures.</purpose>
+
+    <responsibility>
+    You own the lesson creation process. Based on the chapter context and syllabus, generate Lesson objects that include appropriate content (text, quiz, or AI mentor interactions) aligned with learning progression.
+    </responsibility>
+
+    <guidelines>
+    - Vary lesson types: mix text and AI mentor lessons
+    - display_order: Sequential numbering starting from 1
+    - For text lessons: provide comprehensive, clear content
+    - For AI mentor: define clear ai mentor instructions and completion conditions, alongside the correct type of the mentor
+    - Ensure coherence with previously generated lessons
+    </guidelines>
+
+    Chapter: {chapter_title}
+    Chapter Overview: {chapter_overview}
+    Lesson Count: {lesson_count}
+
+    Previously Generated Lessons:{previous_lessons}
+    
+    Input Syllabus: {syllabus}
+    """
             )
-            .invoke({"syllabus": syllabus})
+            .invoke(
+                {
+                    "syllabus": PromptManager._format_syllabus(syllabus),
+                    "chapter_title": chapter.get("title", ""),
+                    "chapter_overview": chapter.get("overview", ""),
+                    "lesson_count": chapter.get("lesson_count", 0),
+                    "previous_lessons": previous_lessons or " None yet",
+                }
+            )
             .to_string()
         )
 
